@@ -105,5 +105,3 @@ plt.ylabel("Gerçek")
 plt.title(f"Confusion Matrix - {model_name}")
 st.pyplot(fig)
 
-
-pip install streamlit
