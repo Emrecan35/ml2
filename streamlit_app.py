@@ -99,7 +99,7 @@ def main():
         💧Bu uygulama, su içilebilirliğini tahmin etmek amacıyla oluşturulmuş bir makine öğrenimi modeline dayanmaktadır.
 
         **💧Veri Seti Özellikleri:💧**
-        - Toplam **9** temel özellik (pH, sertlik, kloramin vs.)
+        - Toplam **10** temel özellik (pH, sertlik, kloramin vs.)
         - **İçilebilirlik:** 0 = İçilemez, 1 = İçilebilir
 
         **Amaç:**
