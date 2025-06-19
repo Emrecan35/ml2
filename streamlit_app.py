@@ -92,13 +92,13 @@ def show_prediction_gauge(probability):
 
 def main():
     st.markdown("<h1 style='text-align: center; color: #0077b6;'>💧 Su İçilebilir mi Acaba?</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size:18px;'>CatBoost modeli ile suyun içilebilir olup olmadığını tahmin ediyoruz.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size:18px;'>📘CatBoost modeli ile suyun içilebilir olup olmadığını tahmin ediyoruz.</p>", unsafe_allow_html=True)
 
     with st.expander("📘 Veri Seti Hakkında Bilgi"):
         st.markdown("""
-        Bu uygulama, su içilebilirliğini tahmin etmek amacıyla oluşturulmuş bir makine öğrenimi modeline dayanmaktadır.
+        💧Bu uygulama, su içilebilirliğini tahmin etmek amacıyla oluşturulmuş bir makine öğrenimi modeline dayanmaktadır.
 
-        **Veri Seti Özellikleri:**
+        **💧Veri Seti Özellikleri:💧**
         - Toplam **9** temel özellik (pH, sertlik, kloramin vs.)
         - **İçilebilirlik:** 0 = İçilemez, 1 = İçilebilir
 
