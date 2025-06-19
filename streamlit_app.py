@@ -166,7 +166,7 @@ def main():
                 - **pH**: 6.5 - 8.5 arası  
                 - **Sertlik**: < 300 mg/L  
                 - **Turbidity (Bulanıklık)**: < 5 NTU  
-                - **Trihalomethanes**: < 0.08 mg/L  
+                - **Trihalomethanes**: < 80 mg/L  
                 - **Kloramin**: 3 - 4 mg/L arası  
                 """)
         else:
