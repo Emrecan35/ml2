@@ -178,9 +178,9 @@ def main():
                 st.markdown("""
                 - **pH**: 6.5 - 8.5 arası  
                 - **Sertlik**: < 300 mg/L  
-                - **Turbidity (Bulanıklık)**: < 5 NTU  
-                - **Trihalomethanes**: < 0.08 mg/L  
-                - **Kloramin**: 3 - 4 mg/L arası  
+                - **Turbidity (Bulanıklık)**: < 5 NTU 0-1 arası en uygun parametre 
+                - **Trihalomethanes**: < 80 mg/L  
+                - **Kloramin**: 1 - 3 mg/L arası  
                 """)
         else:
             st.error(f"Tahmin Sonucu: {result}")
