@@ -19,7 +19,7 @@ if theme == "Koyu Tema":
     st.markdown(
         """
         <style>
-        body { background-color: #0e1117; color: red; }
+        body { background-color: red; color: red; }
         .st-bf { background-color: #0e1117; }
         </style>
         """, unsafe_allow_html=True
