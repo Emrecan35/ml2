@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from sklearn.preprocessing import StandardScaler
 
@@ -30,7 +32,7 @@ def get_user_input():
 
     ph = st.sidebar.slider("pH", 0.0, 14.0, 7.0, step=0.1)
     hardness = st.sidebar.slider("Hardness (Sertlik)", 0.0, 500.0, 150.0, step=1.0)
-    solids = st.sidebar.slider("Solids (Katılar) (ppm)", 4000.0, 4000.0, 5000.0, step=10.0)
+    solids = st.sidebar.slider("Solids (Katılar) (ppm)", 0.0, 50000.0, 20000.0, step=10.0)
     chloramines = st.sidebar.slider("Chloramines (Kloraminler) (ppm)", 0.0, 20.0, 7.0, step=0.1)
     sulfate = st.sidebar.slider("Sulfate (Sülfat)(Mg/L)", 0.0, 500.0, 250.0, step=1.0)
     conductivity = st.sidebar.slider("Conductivity (İletkenlik)", 0.0, 1500.0, 300.0, step=1.0)
@@ -87,9 +89,39 @@ def add_engineered_features(df):
 
     return df
 
+# Girdi görselleştirme
+def plot_user_inputs(input_df):
+    st.subheader("📊 Girdi Değerleri Grafiği")
+    fig, ax = plt.subplots(figsize=(10, 4))
+    sns.barplot(x=input_df.columns, y=input_df.iloc[0], palette="Blues_d", ax=ax)
+    plt.xticks(rotation=45)
+    plt.ylabel("Değer")
+    plt.title("Kullanıcı Girdileri")
+    st.pyplot(fig)
+
+# Olasılık Pie Chart
+def show_prediction_gauge(probability):
+    fig, ax = plt.subplots(figsize=(4, 4))
+    colors = ['red', 'green']
+    labels = ['İçilemez', 'İçilebilir']
+    ax.pie([1 - probability, probability], labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
+    ax.axis('equal')
+    st.subheader("🧪 Tahmin Güveni (Olasılık)")
+    st.pyplot(fig)
+
+# Özellik & sınır karşılaştırması (örnek: Turbidity)
+def plot_feature_with_threshold(value, feature_name, safe_max):
+    fig, ax = plt.subplots()
+    ax.barh([feature_name], [value], color="green" if value <= safe_max else "red")
+    ax.axvline(safe_max, color="gray", linestyle="--", label=f"Güvenli Sınır: {safe_max}")
+    plt.xlabel("Değer")
+    plt.title(f"{feature_name} ve Güvenli Sınır")
+    plt.legend()
+    st.pyplot(fig)
+
 def main():
-    st.title("💧 Suyun İçeilebir mi İçilemez mi Olduğunu Öğreneceğiz")
-    st.write(" Bu çalışmamızda CatBoost modeli ile suyun içilebilir olup olmadığını tahmin edeceğiz.")
+    st.title("💧 Su İçilebilir mi Acaba?")
+    st.write("CatBoost modeli ile suyun içilebilir olup olmadığını tahmin edeceğiz.")
 
     model, scaler = load_model_and_scaler()
     input_df = get_user_input()
@@ -97,10 +129,16 @@ def main():
     st.subheader("🔍 Girdiğiniz Özellikler")
     st.write(input_df)
 
-    # Yeni öznitelikleri ekle
-    input_with_features = add_engineered_features(input_df.copy())
+    plot_user_inputs(input_df)
 
-    # Ölçekleme
+    # Belirli özellikleri güvenli sınırlarla kıyasla
+    plot_feature_with_threshold(input_df["Turbidity"].values[0], "Turbidity", 5.0)
+    plot_feature_with_threshold(input_df["Trihalomethanes"].values[0], "Trihalomethanes", 80.0)
+    plot_feature_with_threshold(input_df["Sulfate"].values[0], "Sulfate", 250.0)
+    plot_feature_with_threshold(input_df["Conductivity"].values[0], "Conductivity", 1000.0)
+
+    # Yeni öznitelikler
+    input_with_features = add_engineered_features(input_df.copy())
     input_scaled = scaler.transform(input_with_features)
 
     if st.button("🚰 Tahmin Et"):
@@ -112,6 +150,8 @@ def main():
             st.success(f"Tahmin Sonucu: {result}\n\nGüven: {probability:.2%}")
         else:
             st.error(f"Tahmin Sonucu: {result}\n\nGüven: {probability:.2%}")
+
+        show_prediction_gauge(probability)
 
 if __name__ == "__main__":
     main()
