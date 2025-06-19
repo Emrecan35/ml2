@@ -89,7 +89,7 @@ def add_engineered_features(df):
 
 def main():
     st.title("💧 Suyun İçeilebir mi İçilemez mi Olduğunu Öğreneceğiz")
-    st.write("CatBoost modeli ile suyun içilebilir olup olmadığı tahmin edilir.")
+    st.write(" Bu çalışmamızda CatBoost modeli ile suyun içilebilir olup olmadığını tahmin edeceğiz.")
 
     model, scaler = load_model_and_scaler()
     input_df = get_user_input()
