@@ -11,7 +11,7 @@ SCALER_PATH = "scaler.pkl"
 DEFAULTS_PATH = "impute_defaults.pkl"
 
 st.set_page_config(
-    page_title="Su İçilebilir Mi Acaba?",
+    page_title="Su İçilebilir mi Acaba?",
     page_icon="💧",
     layout="wide"
 )
@@ -88,7 +88,7 @@ def add_engineered_features(df):
     return df
 
 def main():
-    st.title("💧 Water Potability Prediction App")
+    st.title("💧 Suyun İçeilebir mi İçilemez mi Olduğunu Öğreneceğiz")
     st.write("CatBoost modeli ile suyun içilebilir olup olmadığı tahmin edilir.")
 
     model, scaler = load_model_and_scaler()
