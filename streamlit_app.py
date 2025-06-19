@@ -13,95 +13,85 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from xgboost import XGBClassifier
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, classification_report, recall_score
-st.set_page_config(page_title="Water Potability ML App", layout="wide")
+import streamlit as st
+import pandas as pd
+import joblib
+import numpy as np
 
-st.title("💧 Water Potability - ML Model Dashboard")
+# Dosya yolları
+MODEL_PATH = "aliemrecatboost_model.pkl"
+SCALER_PATH = "scaler.pkl"
+DEFAULTS_PATH = "impute_defaults.pkl"
 
-# Veri Yükleme
-@st.cache_data
-def load_data():
-    df = pd.read_csv("water_potability.csv")
-    return df
+st.set_page_config(
+    page_title="Water Potability Prediction",
+    page_icon="💧",
+    layout="wide"
+)
 
-df = load_data()
+@st.cache_resource
+def load_model_and_scaler():
+    model = joblib.load(MODEL_PATH)
+    scaler = joblib.load(SCALER_PATH)
+    return model, scaler
 
-st.subheader("🔍 İlk 5 Satır")
-st.dataframe(df.head())
+# Varsayılan değerleri yükle
+defaults = joblib.load(DEFAULTS_PATH)
 
-# Eksik verileri doldurma
-df['ph'] = df['ph'].fillna(df.groupby('Potability')['ph'].transform('mean'))
-df['Sulfate'] = df['Sulfate'].fillna(df.groupby('Potability')['Sulfate'].transform('mean'))
-df['Trihalomethanes'] = df['Trihalomethanes'].fillna(df.groupby('Potability')['Trihalomethanes'].transform('mean'))
+def get_user_input():
+    st.sidebar.header("Input Water Quality Features")
 
-# Aykırı değer baskılama
-def cap_outliers(df):
-    for col in df.select_dtypes(include=np.number).columns[:-1]:
-        Q1 = df[col].quantile(0.25)
-        Q3 = df[col].quantile(0.75)
-        IQR = Q3 - Q1
-        lower = Q1 - 1.5 * IQR
-        upper = Q3 + 1.5 * IQR
-        df[col] = np.where(df[col] < lower, lower,
-                           np.where(df[col] > upper, upper, df[col]))
-    return df
+    ph = st.sidebar.slider("pH", 0.0, 14.0, 7.0, step=0.1)
+    hardness = st.sidebar.slider("Hardness", 0.0, 500.0, 150.0, step=1.0)
+    solids = st.sidebar.slider("Solids (ppm)", 0.0, 50000.0, 20000.0, step=10.0)
+    chloramines = st.sidebar.slider("Chloramines", 0.0, 20.0, 7.0, step=0.1)
+    sulfate = st.sidebar.slider("Sulfate", 0.0, 500.0, 250.0, step=1.0)
+    conductivity = st.sidebar.slider("Conductivity", 0.0, 1500.0, 300.0, step=1.0)
+    organic_carbon = st.sidebar.slider("Organic Carbon", 0.0, 20.0, 5.0, step=0.1)
+    trihalomethanes = st.sidebar.slider("Trihalomethanes", 0.0, 150.0, 40.0, step=0.1)
+    turbidity = st.sidebar.slider("Turbidity", 0.0, 15.0, 3.0, step=0.1)
 
-df = cap_outliers(df)
+    data = {
+        "ph": ph,
+        "Hardness": hardness,
+        "Solids": solids,
+        "Chloramines": chloramines,
+        "Sulfate": sulfate,
+        "Conductivity": conductivity,
+        "Organic_carbon": organic_carbon,
+        "Trihalomethanes": trihalomethanes,
+        "Turbidity": turbidity
+    }
 
-# Model Seçimi
-st.sidebar.header("⚙️ Model ve Eşik Ayarları")
-model_name = st.sidebar.selectbox("Model Seç", [
-    "Lojistik Regresyon", "Karar Ağacı", "KNN", "Random Forest", "XGBoost", "Voting (Hepsi)"
-])
+    input_df = pd.DataFrame([data])
 
-threshold = st.sidebar.slider("Sınıflandırma Eşiği", 0.1, 0.9, 0.5, 0.01)
+    # Eksik değerleri doldur
+    input_df.fillna(defaults, inplace=True)
 
-# Train-Test bölme
-X = df.drop("Potability", axis=1)
-y = df["Potability"]
+    return input_df
 
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+def main():
+    st.title("💧 Water Potability Prediction App")
+    st.write("CatBoost model kullanılarak su içilebilirliği tahmini yapılmaktadır.")
 
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+    model, scaler = load_model_and_scaler()
+    input_df = get_user_input()
 
-# Model Seçimi
-if model_name == "Lojistik Regresyon":
-    model = LogisticRegression()
-elif model_name == "Karar Ağacı":
-    model = DecisionTreeClassifier()
-elif model_name == "KNN":
-    model = KNeighborsClassifier()
-elif model_name == "Random Forest":
-    model = RandomForestClassifier()
-elif model_name == "XGBoost":
-    model = XGBClassifier()
-else:
-    model = VotingClassifier(estimators=[
-        ('lr', LogisticRegression()),
-        ('dt', DecisionTreeClassifier()),
-        ('knn', KNeighborsClassifier())
-    ], voting='soft')
+    st.subheader("Girdiğiniz Özellikler")
+    st.write(input_df)
 
-model.fit(X_train, y_train)
-y_proba = model.predict_proba(X_test)[:, 1]
-y_pred = (y_proba > threshold).astype(int)
+    # Ölçekleme ve tahmin
+    input_scaled = scaler.transform(input_df)
 
-# Confusion Matrix ve Metrikler
-cm = confusion_matrix(y_test, y_pred)
-acc = accuracy_score(y_test, y_pred)
-prec = precision_score(y_test, y_pred)
-rec = recall_score(y_test, y_pred)
+    if st.button("Tahmin Et"):
+        prediction = model.predict(input_scaled)
+        probability = model.predict_proba(input_scaled)[0][1]
+        result = "İÇİLEBİLİR SU 💧" if prediction[0] == 1 else "İÇİLEMEZ SU ❌"
 
-st.subheader("📉 Sonuçlar")
-col1, col2, col3 = st.columns(3)
-col1.metric("Doğruluk (Accuracy)", f"{acc:.2f}")
-col2.metric("Kesinlik (Precision)", f"{prec:.2f}")
-col3.metric("Duyarlılık (Recall)", f"{rec:.2f}")
+        if prediction[0] == 1:
+            st.success(f"Tahmin Sonucu: {result}\n\nGüven: {probability:.2%}")
+        else:
+            st.error(f"Tahmin Sonucu: {result}\n\nGüven: {probability:.2%}")
 
-fig, ax = plt.subplots()
-sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=["0", "1"], yticklabels=["0", "1"])
-plt.xlabel("Tahmin")
-plt.ylabel("Gerçek")
-plt.title(f"Confusion Matrix - {model_name}")
-st.pyplot(fig)
-
+if __name__ == "__main__":
+    main()
