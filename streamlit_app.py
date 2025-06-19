@@ -141,6 +141,18 @@ def main():
         
         Ekstra Özellikler (Feature Engineering):
         - Kimyasal yoğunluk skorları
+        df["mineral_density"] = (df["Solids"] + df["Hardness"]) / (df["Conductivity"] + 0.01)
+    df["ph_conductivity_interaction"] = df["ph"] * df["Conductivity"]
+    df["ph_div_turbidity"] = df["ph"] / (df["Turbidity"] + 0.01)
+    df["chloramine_ratio_total_chem"] = df["Chloramines"] / (df["Trihalomethanes"] + df["Organic_carbon"] + 0.01)
+    df["tri_to_organic_ratio"] = df["Trihalomethanes"] / (df["Organic_carbon"] + 0.01)
+    df["sulfate_to_total_dissolved"] = df["Sulfate"] / (df["Solids"] + df["Conductivity"] + 0.01)
+    df["hardness_ratio"] = df["Hardness"] / (df["ph"] + df["Turbidity"] + 0.01)
+    df["hard_ph_turb_mix"] = df["Hardness"] * df["ph"] * df["Turbidity"]
+    df["chem_density_score"] = (
+        df["Chloramines"]**0.5 +
+        df["Trihalomethanes"]**0.5 +
+        df["Organic_carbon"]**0.5
         - Normalize toksisite skorları
         - Zıt etkili birleşimler yapılmıştır
         """)
