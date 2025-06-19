@@ -24,7 +24,6 @@ def load_model_and_scaler():
     scaler = joblib.load(SCALER_PATH)
     return model, scaler
 
-# Varsayılan değerleri yükle
 defaults = joblib.load(DEFAULTS_PATH)
 
 def get_user_input():
@@ -32,13 +31,13 @@ def get_user_input():
 
     ph = st.sidebar.slider("pH", 0.0, 14.0, 7.0, step=0.1)
     hardness = st.sidebar.slider("Hardness (Sertlik)", 0.0, 500.0, 150.0, step=1.0)
-    solids = st.sidebar.slider("Solids (Katılar) (ppm)", 0.0, 50000.0, 20000.0, step=10.0)
-    chloramines = st.sidebar.slider("Chloramines (Kloraminler) (ppm)", 0.0, 20.0, 7.0, step=0.1)
-    sulfate = st.sidebar.slider("Sulfate (Sülfat)(Mg/L)", 0.0, 500.0, 250.0, step=1.0)
-    conductivity = st.sidebar.slider("Conductivity (İletkenlik)", 0.0, 1500.0, 300.0, step=1.0)
-    organic_carbon = st.sidebar.slider("Organic Carbon (Organik Karbon) (ppm)", 0.0, 20.0, 5.0, step=0.1)
-    trihalomethanes = st.sidebar.slider("Trihalomethanes (Trihalometanlar) (Mg/L)", 0.0, 150.0, 40.0, step=0.1)
-    turbidity = st.sidebar.slider("Turbidity (Bulanıklık)", 0.0, 15.0, 3.0, step=0.1)
+    solids = st.sidebar.slider("Solids (ppm)", 0.0, 50000.0, 20000.0, step=10.0)
+    chloramines = st.sidebar.slider("Chloramines (ppm)", 0.0, 20.0, 7.0, step=0.1)
+    sulfate = st.sidebar.slider("Sulfate (mg/L)", 0.0, 500.0, 250.0, step=1.0)
+    conductivity = st.sidebar.slider("Conductivity", 0.0, 1500.0, 300.0, step=1.0)
+    organic_carbon = st.sidebar.slider("Organic Carbon (ppm)", 0.0, 20.0, 5.0, step=0.1)
+    trihalomethanes = st.sidebar.slider("Trihalomethanes (mg/L)", 0.0, 150.0, 40.0, step=0.1)
+    turbidity = st.sidebar.slider("Turbidity", 0.0, 15.0, 3.0, step=0.1)
 
     data = {
         "ph": ph,
@@ -60,36 +59,28 @@ def add_engineered_features(df):
     df["mineral_density"] = (df["Solids"] + df["Hardness"]) / (df["Conductivity"] + 0.01)
     df["ph_conductivity_interaction"] = df["ph"] * df["Conductivity"]
     df["ph_div_turbidity"] = df["ph"] / (df["Turbidity"] + 0.01)
-
     df["chloramine_ratio_total_chem"] = df["Chloramines"] / (df["Trihalomethanes"] + df["Organic_carbon"] + 0.01)
     df["tri_to_organic_ratio"] = df["Trihalomethanes"] / (df["Organic_carbon"] + 0.01)
     df["sulfate_to_total_dissolved"] = df["Sulfate"] / (df["Solids"] + df["Conductivity"] + 0.01)
-
     df["hardness_ratio"] = df["Hardness"] / (df["ph"] + df["Turbidity"] + 0.01)
     df["hard_ph_turb_mix"] = df["Hardness"] * df["ph"] * df["Turbidity"]
-
     df["chem_density_score"] = (
         df["Chloramines"]**0.5 +
         df["Trihalomethanes"]**0.5 +
         df["Organic_carbon"]**0.5
     )
-
     df["sulfate_minus_conductivity"] = df["Sulfate"] - df["Conductivity"]
     df["solids_minus_organic"] = df["Solids"] - df["Organic_carbon"]
     df["ph_minus_trihalo"] = df["ph"] - df["Trihalomethanes"]
-
     df["normalized_conductivity"] = df["Conductivity"] / df["Conductivity"].max()
     df["normalized_toxicity"] = (
         df["Chloramines"]/df["Chloramines"].max() +
         df["Trihalomethanes"]/df["Trihalomethanes"].max()
     )
-
     df["ph_x_inverse_turbidity"] = df["ph"] * (1 / (df["Turbidity"] + 0.01))
     df["sulfate_div_logsolids"] = df["Sulfate"] / (np.log1p(df["Solids"]))
-
     return df
 
-# Girdi görselleştirme
 def plot_user_inputs(input_df):
     st.subheader("📊 Girdi Değerleri Grafiği")
     fig, ax = plt.subplots(figsize=(10, 4))
@@ -99,7 +90,18 @@ def plot_user_inputs(input_df):
     plt.title("Kullanıcı Girdileri")
     st.pyplot(fig)
 
-# Olasılık Pie Chart
+def show_line_chart(input_df):
+    st.subheader("📈 Girdi Değerlerinin Line Chart Gösterimi")
+    df_long = input_df.T.reset_index()
+    df_long.columns = ['Özellik', 'Değer']
+    df_long['İndeks'] = range(1, len(df_long) + 1)
+    fig, ax = plt.subplots(figsize=(10, 4))
+    sns.lineplot(data=df_long, x="İndeks", y="Değer", marker='o', palette="tab10", ax=ax)
+    ax.set_xticks(df_long["İndeks"])
+    ax.set_xticklabels(df_long["Özellik"], rotation=45, ha="right")
+    plt.title("Line Chart ile Girdi Özellikleri")
+    st.pyplot(fig)
+
 def show_prediction_gauge(probability):
     fig, ax = plt.subplots(figsize=(4, 4))
     colors = ['red', 'green']
@@ -109,7 +111,6 @@ def show_prediction_gauge(probability):
     st.subheader("🧪 Tahmin Güveni (Olasılık)")
     st.pyplot(fig)
 
-# Özellik & sınır karşılaştırması (örnek: Turbidity)
 def plot_feature_with_threshold(value, feature_name, safe_max):
     fig, ax = plt.subplots()
     ax.barh([feature_name], [value], color="green" if value <= safe_max else "red")
@@ -120,8 +121,8 @@ def plot_feature_with_threshold(value, feature_name, safe_max):
     st.pyplot(fig)
 
 def main():
-    st.title("💧 Su İçilebilir mi Acaba?")
-    st.write("CatBoost modeli ile suyun içilebilir olup olmadığını tahmin edeceğiz.")
+    st.markdown("<h1 style='text-align: center; color: #0077b6;'>💧 Su İçilebilir mi Acaba?</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size:18px;'>CatBoost modeli ile suyun içilebilir olup olmadığını tahmin ediyoruz.</p>", unsafe_allow_html=True)
 
     model, scaler = load_model_and_scaler()
     input_df = get_user_input()
@@ -130,14 +131,15 @@ def main():
     st.write(input_df)
 
     plot_user_inputs(input_df)
+    show_line_chart(input_df)
 
-    # Belirli özellikleri güvenli sınırlarla kıyasla
+    # Belirli özellikleri eşiklerle göster
     plot_feature_with_threshold(input_df["Turbidity"].values[0], "Turbidity", 5.0)
     plot_feature_with_threshold(input_df["Trihalomethanes"].values[0], "Trihalomethanes", 80.0)
     plot_feature_with_threshold(input_df["Sulfate"].values[0], "Sulfate", 250.0)
     plot_feature_with_threshold(input_df["Conductivity"].values[0], "Conductivity", 1000.0)
 
-    # Yeni öznitelikler
+    # Özellik mühendisliği ve ölçekleme
     input_with_features = add_engineered_features(input_df.copy())
     input_scaled = scaler.transform(input_with_features)
 
