@@ -13,18 +13,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# Tema switcher
-theme = st.sidebar.radio("🌗 Tema Seçimi", ["Açık Tema", "Koyu Tema"])
-if theme == "Koyu Tema":
-    st.markdown(
-        """
-        <style>
-        body { background-color: red; color: red; }
-        .st-bf { background-color: #0e1117; }
-        </style>
-        """, unsafe_allow_html=True
-    )
-
 # Dosya yolları
 MODEL_PATH = "aliemrecatboost_model.pkl"
 SCALER_PATH = "scaler.pkl"
