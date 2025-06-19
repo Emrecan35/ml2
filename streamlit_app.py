@@ -3,6 +3,10 @@ import pandas as pd
 import numpy as np
 import joblib
 import matplotlib.pyplot as plt
+import shap
+from fpdf import FPDF
+import base64
+import io
 
 from sklearn.preprocessing import StandardScaler
 
@@ -13,7 +17,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Model ve scaler yükleme
+# Model ve scaler dosya yolları
 MODEL_PATH = "aliemrecatboost_model.pkl"
 SCALER_PATH = "scaler.pkl"
 DEFAULTS_PATH = "impute_defaults.pkl"
@@ -90,6 +94,45 @@ def show_prediction_gauge(probability):
         ax.axis('equal')
         st.pyplot(fig)
 
+def create_pdf_report(input_data, prediction, probability):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "Su İçilebilirlik Tahmini Raporu", ln=True, align="C")
+    pdf.ln(10)
+
+    pdf.set_font("Arial", "", 12)
+    pdf.cell(0, 10, "Girilen Su Kalitesi Özellikleri:", ln=True)
+    for key, value in input_data.items():
+        pdf.cell(0, 8, f"{key}: {value}", ln=True)
+
+    pdf.ln(5)
+    result_text = "İÇİLEBİLİR SU 💧" if prediction == 1 else "İÇİLEMEZ SU ❌"
+    pdf.cell(0, 10, f"Tahmin Sonucu: {result_text}", ln=True)
+    pdf.cell(0, 10, f"Güven Skoru: %{probability*100:.2f}", ln=True)
+
+    # PDF verisini bytes olarak al
+    pdf_buffer = io.BytesIO()
+    pdf.output(pdf_buffer)
+    pdf_buffer.seek(0)
+    return pdf_buffer
+
+def plot_shap_summary(model, X_scaled):
+    st.subheader("🔍 Model Özellik Önem Skoru (SHAP)")
+
+    try:
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(X_scaled)
+        # shap_values catboost'ta liste dönebilir, direkt ilk elemana bakıyoruz:
+        if isinstance(shap_values, list):
+            shap_values = shap_values[0]
+
+        fig, ax = plt.subplots(figsize=(8, 5))
+        shap.summary_plot(shap_values, features=X_scaled, feature_names=model.feature_names_in_, plot_type="bar", show=False)
+        st.pyplot(fig)
+    except Exception as e:
+        st.error(f"SHAP grafiği oluşturulurken hata: {e}")
+
 def main():
     st.markdown("<h1 style='text-align: center; color: #0077b6;'>💧 Su İçilebilir mi Acaba?</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size:18px;'>CatBoost modeli ile suyun içilebilir olup olmadığını tahmin ediyoruz.</p>", unsafe_allow_html=True)
@@ -151,6 +194,17 @@ def main():
                 """)
 
         show_prediction_gauge(probability)
+        plot_shap_summary(model, input_scaled)
+
+        # PDF raporu oluşturup indirilebilir yap
+        pdf_buffer = create_pdf_report(input_df.iloc[0].to_dict(), prediction[0], probability)
+
+        st.download_button(
+            label="📄 PDF Raporunu İndir",
+            data=pdf_buffer,
+            file_name="su_icerik_tahmin_raporu.pdf",
+            mime="application/pdf"
+        )
 
     st.markdown("""
     <hr>
