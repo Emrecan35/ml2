@@ -11,7 +11,7 @@ SCALER_PATH = "scaler.pkl"
 DEFAULTS_PATH = "impute_defaults.pkl"
 
 st.set_page_config(
-    page_title="Water Potability Prediction",
+    page_title="Su İçilebilir Mi Acaba?",
     page_icon="💧",
     layout="wide"
 )
@@ -29,14 +29,14 @@ def get_user_input():
     st.sidebar.header("💧 Su Kalitesi Özelliklerini Girin")
 
     ph = st.sidebar.slider("pH", 0.0, 14.0, 7.0, step=0.1)
-    hardness = st.sidebar.slider("Hardness", 0.0, 500.0, 150.0, step=1.0)
-    solids = st.sidebar.slider("Solids (ppm)", 0.0, 50000.0, 20000.0, step=10.0)
-    chloramines = st.sidebar.slider("Chloramines", 0.0, 20.0, 7.0, step=0.1)
-    sulfate = st.sidebar.slider("Sulfate", 0.0, 500.0, 250.0, step=1.0)
-    conductivity = st.sidebar.slider("Conductivity", 0.0, 1500.0, 300.0, step=1.0)
-    organic_carbon = st.sidebar.slider("Organic Carbon", 0.0, 20.0, 5.0, step=0.1)
-    trihalomethanes = st.sidebar.slider("Trihalomethanes", 0.0, 150.0, 40.0, step=0.1)
-    turbidity = st.sidebar.slider("Turbidity", 0.0, 15.0, 3.0, step=0.1)
+    hardness = st.sidebar.slider("Hardness (Sertlik)", 0.0, 500.0, 150.0, step=1.0)
+    solids = st.sidebar.slider("Solids (Katılar) (ppm)", 0.0, 50000.0, 20000.0, step=10.0)
+    chloramines = st.sidebar.slider("Chloramines (Kloraminler) (ppm)", 0.0, 20.0, 7.0, step=0.1)
+    sulfate = st.sidebar.slider("Sulfate (Sülfat)(Mg/L)", 0.0, 500.0, 250.0, step=1.0)
+    conductivity = st.sidebar.slider("Conductivity (İletkenlik)", 0.0, 1500.0, 300.0, step=1.0)
+    organic_carbon = st.sidebar.slider("Organic Carbon (Organik Karbon) (ppm)", 0.0, 20.0, 5.0, step=0.1)
+    trihalomethanes = st.sidebar.slider("Trihalomethanes (Trihalometanlar) (Mg/L)", 0.0, 150.0, 40.0, step=0.1)
+    turbidity = st.sidebar.slider("Turbidity (Bulanıklık)", 0.0, 15.0, 3.0, step=0.1)
 
     data = {
         "ph": ph,
