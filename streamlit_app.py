@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 
 from sklearn.preprocessing import StandardScaler
 
-# Tema seçimi
+# Sayfa ayarı
 st.set_page_config(
     page_title="Su İçilebilir mi Acaba?",
     page_icon="💧",
     layout="wide"
 )
 
-# Dosya yolları
+# Model ve scaler yükleme
 MODEL_PATH = "aliemrecatboost_model.pkl"
 SCALER_PATH = "scaler.pkl"
 DEFAULTS_PATH = "impute_defaults.pkl"
@@ -94,6 +94,26 @@ def main():
     st.markdown("<h1 style='text-align: center; color: #0077b6;'>💧 Su İçilebilir mi Acaba?</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size:18px;'>CatBoost modeli ile suyun içilebilir olup olmadığını tahmin ediyoruz.</p>", unsafe_allow_html=True)
 
+    with st.expander("📘 Veri Seti Hakkında Bilgi"):
+        st.markdown("""
+        Bu uygulama, su içilebilirliğini tahmin etmek amacıyla oluşturulmuş bir makine öğrenimi modeline dayanmaktadır.
+
+        **Veri Seti Özellikleri:**
+        - Toplam 10 temel özellik (pH, sertlik, kloramin vs.)
+        - İçilebilirlik: 0 = İçilemez, 1 = İçilebilir
+
+        **Amaç:**
+        - Kullanıcının girdiği değerlere göre suyun içilebilir olup olmadığını tahmin etmek
+
+        **Kullanılan Model:**
+        - CatBoostClassifier (dengelenmiş sınıflar ve yeni öznitelikler ile)
+
+        **Ekstra Özellikler (Feature Engineering):**
+        - Kimyasal yoğunluk skorları
+        - Normalize toksisite skorları
+        - Zıt etkili birleşimler
+        """)
+
     model, scaler = load_model_and_scaler()
     input_df = get_user_input()
 
@@ -111,11 +131,33 @@ def main():
         if prediction[0] == 1:
             st.success(f"Tahmin Sonucu: {result}")
             st.info(f"💡 Güven Skoru: {probability:.2%} — Su büyük ihtimalle içilebilir.")
+            with st.expander("🧾 İçilebilir Su Kriterleri"):
+                st.markdown("""
+                - **pH**: 6.5 - 8.5 arası  
+                - **Sertlik**: < 300 mg/L  
+                - **Turbidity (Bulanıklık)**: < 5 NTU  
+                - **Trihalomethanes**: < 0.08 mg/L  
+                - **Kloramin**: 3 - 4 mg/L arası  
+                """)
         else:
             st.error(f"Tahmin Sonucu: {result}")
             st.warning(f"⚠️ Güven Skoru: {probability:.2%} — Su içmeye uygun olmayabilir!")
+            with st.expander("🚱 Olası Sebepler"):
+                st.markdown("""
+                - pH seviyesi çok düşük veya çok yüksek olabilir.  
+                - Kimyasal kalıntılar (kloramin, trihalometan) yüksek olabilir.  
+                - İletkenlik veya bulanıklık sınırların dışında olabilir.  
+                - Toplam toksisite riskli seviyede olabilir.  
+                """)
 
         show_prediction_gauge(probability)
+
+    st.markdown("""
+    <hr>
+    <p style='text-align: center; font-size: 14px;'>
+    Bu uygulama, su kalitesine göre içilebilirlik tahmini için geliştirilmiştir. | Geliştiren: Emrecan Karaslan © 2025
+    </p>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
