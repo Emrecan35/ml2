@@ -9,7 +9,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from xgboost import XGBClassifier
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, classification_report
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, classification_report, recall_score
 st.set_page_config(page_title="Water Potability ML App", layout="wide")
 
 st.title("💧 Water Potability - ML Model Dashboard")
