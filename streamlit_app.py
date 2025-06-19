@@ -136,7 +136,7 @@ def main():
         **-Bulanıklık**:
             Suyun bulanıklığı, askıda halde bulunan katı madde miktarına bağlıdır. Suyun ışık yayan özelliklerinin bir ölçüsüdür ve test, kolloidal maddeye göre atık deşarjının kalitesini belirtmek için kullanılır. Wondo Genet Kampüsü için elde edilen ortalama bulanıklık değeri (0,98 NTU) DSÖ tarafından önerilen 5,00 NTU değerinden düşüktür.
         
-        -Hedef Değişkenimiz:İçilebilirlik: 
+        -Hedef Değişkenimiz: İçilebilirlik: 
         Suyun insan tüketimi için güvenli olup olmadığını gösterir, burada 1 içilebilir ve 0 içilemez anlamına gelir.
         Ekstra Özellikler (Feature Engineering):
         - Kimyasal yoğunluk skorları
