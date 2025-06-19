@@ -1,22 +1,9 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.ensemble import VotingClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from xgboost import XGBClassifier
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, classification_report, recall_score
-import streamlit as st
-import pandas as pd
 import joblib
-import numpy as np
+
+from sklearn.preprocessing import StandardScaler
 
 # Dosya yolları
 MODEL_PATH = "aliemrecatboost_model.pkl"
@@ -39,7 +26,7 @@ def load_model_and_scaler():
 defaults = joblib.load(DEFAULTS_PATH)
 
 def get_user_input():
-    st.sidebar.header("Input Water Quality Features")
+    st.sidebar.header("💧 Su Kalitesi Özelliklerini Girin")
 
     ph = st.sidebar.slider("pH", 0.0, 14.0, 7.0, step=0.1)
     hardness = st.sidebar.slider("Hardness", 0.0, 500.0, 150.0, step=1.0)
@@ -63,27 +50,60 @@ def get_user_input():
         "Turbidity": turbidity
     }
 
-    input_df = pd.DataFrame([data])
+    df = pd.DataFrame([data])
+    df.fillna(defaults, inplace=True)
+    return df
 
-    # Eksik değerleri doldur
-    input_df.fillna(defaults, inplace=True)
+def add_engineered_features(df):
+    df["mineral_density"] = (df["Solids"] + df["Hardness"]) / (df["Conductivity"] + 0.01)
+    df["ph_conductivity_interaction"] = df["ph"] * df["Conductivity"]
+    df["ph_div_turbidity"] = df["ph"] / (df["Turbidity"] + 0.01)
 
-    return input_df
+    df["chloramine_ratio_total_chem"] = df["Chloramines"] / (df["Trihalomethanes"] + df["Organic_carbon"] + 0.01)
+    df["tri_to_organic_ratio"] = df["Trihalomethanes"] / (df["Organic_carbon"] + 0.01)
+    df["sulfate_to_total_dissolved"] = df["Sulfate"] / (df["Solids"] + df["Conductivity"] + 0.01)
+
+    df["hardness_ratio"] = df["Hardness"] / (df["ph"] + df["Turbidity"] + 0.01)
+    df["hard_ph_turb_mix"] = df["Hardness"] * df["ph"] * df["Turbidity"]
+
+    df["chem_density_score"] = (
+        df["Chloramines"]**0.5 +
+        df["Trihalomethanes"]**0.5 +
+        df["Organic_carbon"]**0.5
+    )
+
+    df["sulfate_minus_conductivity"] = df["Sulfate"] - df["Conductivity"]
+    df["solids_minus_organic"] = df["Solids"] - df["Organic_carbon"]
+    df["ph_minus_trihalo"] = df["ph"] - df["Trihalomethanes"]
+
+    df["normalized_conductivity"] = df["Conductivity"] / df["Conductivity"].max()
+    df["normalized_toxicity"] = (
+        df["Chloramines"]/df["Chloramines"].max() +
+        df["Trihalomethanes"]/df["Trihalomethanes"].max()
+    )
+
+    df["ph_x_inverse_turbidity"] = df["ph"] * (1 / (df["Turbidity"] + 0.01))
+    df["sulfate_div_logsolids"] = df["Sulfate"] / (np.log1p(df["Solids"]))
+
+    return df
 
 def main():
     st.title("💧 Water Potability Prediction App")
-    st.write("CatBoost model kullanılarak su içilebilirliği tahmini yapılmaktadır.")
+    st.write("CatBoost modeli ile suyun içilebilir olup olmadığı tahmin edilir.")
 
     model, scaler = load_model_and_scaler()
     input_df = get_user_input()
 
-    st.subheader("Girdiğiniz Özellikler")
+    st.subheader("🔍 Girdiğiniz Özellikler")
     st.write(input_df)
 
-    # Ölçekleme ve tahmin
-    input_scaled = scaler.transform(input_df)
+    # Yeni öznitelikleri ekle
+    input_with_features = add_engineered_features(input_df.copy())
 
-    if st.button("Tahmin Et"):
+    # Ölçekleme
+    input_scaled = scaler.transform(input_with_features)
+
+    if st.button("🚰 Tahmin Et"):
         prediction = model.predict(input_scaled)
         probability = model.predict_proba(input_scaled)[0][1]
         result = "İÇİLEBİLİR SU 💧" if prediction[0] == 1 else "İÇİLEMEZ SU ❌"
