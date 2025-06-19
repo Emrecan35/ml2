@@ -2,7 +2,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
 
 st.set_page_config(page_title="Water Potability ML App", layout="wide")
 
