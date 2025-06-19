@@ -30,7 +30,7 @@ def get_user_input():
 
     ph = st.sidebar.slider("pH", 0.0, 14.0, 7.0, step=0.1)
     hardness = st.sidebar.slider("Hardness (Sertlik)", 0.0, 500.0, 150.0, step=1.0)
-    solids = st.sidebar.slider("Solids (Katılar) (ppm)", 0.0, 50000.0, 20000.0, step=10.0)
+    solids = st.sidebar.slider("Solids (Katılar) (ppm)", 0.0, 20000.0, 20000.0, step=10.0)
     chloramines = st.sidebar.slider("Chloramines (Kloraminler) (ppm)", 0.0, 20.0, 7.0, step=0.1)
     sulfate = st.sidebar.slider("Sulfate (Sülfat)(Mg/L)", 0.0, 500.0, 250.0, step=1.0)
     conductivity = st.sidebar.slider("Conductivity (İletkenlik)", 0.0, 1500.0, 300.0, step=1.0)
