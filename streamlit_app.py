@@ -138,6 +138,7 @@ def main():
         
         İçilebilirlik: 
         Suyun insan tüketimi için güvenli olup olmadığını gösterir, burada 1 içilebilir ve 0 içilemez anlamına gelir.
+        
         Ekstra Özellikler (Feature Engineering):
         - Kimyasal yoğunluk skorları
         - Normalize toksisite skorları
