@@ -2,14 +2,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, VotingClassifier
-from xgboost import XGBClassifier
+
 
 st.set_page_config(page_title="Water Potability ML App", layout="wide")
 
